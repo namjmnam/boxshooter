@@ -1,6 +1,6 @@
 import pygame
 import random
-import math  # Import math module for sine function
+import math  # Import math module for sine and cosine functions
 
 # Initialize Pygame
 pygame.init()
@@ -31,8 +31,8 @@ laser_speed = 2
 laser_width, laser_height = 1, 15
 laser_cooldown = 0
 laser_cooldown_period = 30
-laser_amplitude = 20  # Amplitude of the sine wave
-laser_frequency = 0.1  # Frequency of the sine wave
+laser_amplitude = 20  # Amplitude of the wave
+laser_frequency = 0.1  # Frequency of the wave
 
 # Enemy variables
 enemy_speed = 0.1  # Very slow speed
@@ -64,11 +64,22 @@ while running:
             reset_game()
         continue
 
-    # Shoot laser if space is held down
+    # Shoot sine wave laser with space bar
     if keys[pygame.K_SPACE] and laser_cooldown == 0:
-        # Store initial position, age, and rectangle for sine wave movement
         initial_x = airplane_rect.centerx - laser_width / 2
         lasers.append({
+            'type': 'sine',
+            'initial_x': initial_x,
+            'age': 0,
+            'rect': pygame.Rect(initial_x, airplane_rect.top, laser_width, laser_height)
+        })
+        laser_cooldown = laser_cooldown_period
+
+    # Shoot cosine wave laser with 'C' key
+    if keys[pygame.K_c] and laser_cooldown == 0:
+        initial_x = airplane_rect.centerx - laser_width / 2
+        lasers.append({
+            'type': 'cosine',
             'initial_x': initial_x,
             'age': 0,
             'rect': pygame.Rect(initial_x, airplane_rect.top, laser_width, laser_height)
@@ -97,9 +108,12 @@ while running:
     if laser_cooldown > 0:
         laser_cooldown -= 1
     for laser in lasers[:]:
-        # Update age and position using a sine wave pattern
+        # Update age and position using a sine or cosine wave pattern
         laser['age'] += 1
-        wave_x = laser['initial_x'] + laser_amplitude * math.sin(laser_frequency * laser['age'])
+        if laser['type'] == 'sine':
+            wave_x = laser['initial_x'] + laser_amplitude * math.sin(laser_frequency * laser['age'])
+        else:  # 'cosine'
+            wave_x = laser['initial_x'] + laser_amplitude * math.cos(laser_frequency * laser['age'])
         laser['rect'].x = int(wave_x)
         laser['rect'].y -= laser_speed
         if laser['rect'].y < 0:
