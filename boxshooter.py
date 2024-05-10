@@ -8,29 +8,37 @@ pygame.init()
 screen_width, screen_height = 800, 600
 screen = pygame.display.set_mode((screen_width, screen_height))
 
+# Function to reset game variables
+def reset_game():
+    global airplane_pos, airplane_rect, lasers, enemies, spawn_counter
+    airplane_pos = [screen_width / 2 - airplane_size / 2, screen_height - airplane_size * 2]
+    airplane_rect = pygame.Rect(airplane_pos[0], airplane_pos[1], airplane_size, airplane_size)
+    lasers = []
+    enemies = []
+    spawn_counter = 0
+
 # Airplane variables
 airplane_color = (0, 255, 0)  # Green color for the airplane
 airplane_size = 30  # Size of the triangle representing the airplane
 airplane_speed = 0.5  # Slow speed
-airplane_pos = [screen_width / 2 - airplane_size / 2, screen_height - airplane_size * 2]  # Use a list to store float position
-airplane_rect = pygame.Rect(airplane_pos[0], airplane_pos[1], airplane_size, airplane_size)
+
+# Initial setup call
+reset_game()
 
 # Laser variables
-lasers = []
-laser_speed = 2  # Reduced laser speed
+laser_speed = 2
 laser_width, laser_height = 1, 15
 laser_cooldown = 0
-laser_cooldown_period = 30  # Increased cooldown period
+laser_cooldown_period = 30
 
 # Enemy variables
-enemies = []
 enemy_speed = 0.1  # Very slow speed
 enemy_size = 40  # Size of the enemies
 enemy_spawn_rate = 5  # How often to spawn enemies
 
 # Game Loop
 running = True
-spawn_counter = 0
+game_over = False
 while running:
     # Handle events
     for event in pygame.event.get():
@@ -39,6 +47,19 @@ while running:
 
     # Get keys pressed
     keys = pygame.key.get_pressed()
+
+    if game_over:
+        # Display game over screen and wait for input to continue
+        screen.fill((0, 0, 0))
+        font = pygame.font.Font(None, 74)
+        text = font.render('Game Over', True, (255, 0, 0))
+        text_rect = text.get_rect(center=(screen_width / 2, screen_height / 2))
+        screen.blit(text, text_rect)
+        pygame.display.update()
+        if keys[pygame.K_c]:  # Press 'C' to continue
+            game_over = False
+            reset_game()
+        continue
 
     # Shoot laser if space is held down
     if keys[pygame.K_SPACE] and laser_cooldown == 0:
@@ -76,7 +97,7 @@ while running:
     if spawn_counter >= enemy_spawn_rate:
         spawn_counter = 0
         enemy_x = random.randint(0, screen_width - enemy_size)
-        enemies.append([enemy_x, -enemy_size, enemy_speed])  # Store as [x, y, speed]
+        enemies.append([enemy_x, -enemy_size, enemy_speed])
 
     # Move enemies with float values
     for enemy in enemies[:]:
@@ -95,7 +116,7 @@ while running:
 
         # Check for collision with airplane
         if airplane_rect.colliderect(enemy_rect):
-            running = False  # End the game
+            game_over = True  # Trigger game over state
 
     # Render game
     screen.fill((0, 0, 0))  # Fill the screen with black
@@ -109,14 +130,13 @@ while running:
 
     # Draw lasers
     for laser in lasers:
-        pygame.draw.rect(screen, (255, 0, 0), laser)  # Draw lasers (red color)
+        pygame.draw.rect(screen, (255, 0, 0), laser)
 
     # Draw enemies
     for enemy in enemies:
         enemy_rect = pygame.Rect(enemy[0], int(enemy[1]), enemy_size, enemy_size)
-        pygame.draw.rect(screen, (255, 255, 0), enemy_rect)  # Draw enemies (yellow color)
+        pygame.draw.rect(screen, (255, 255, 0), enemy_rect)
     
     pygame.display.update()
 
 pygame.quit()
-
